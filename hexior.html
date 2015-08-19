@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          #myCanvas {
+            position:absolute;
+            left:0;
+            top:0;
+            /*border:1px
+            solid #000000;*/
+          }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+        <script>
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            var hex = [];
+            var sizeY = 25;
+            var size = 2 * sizeY/Math.sqrt(3);
+            var neighbours_numbers = [-13,1,14,13,12,-1];
+
+            ctx.canvas.width  = window.innerWidth;
+            ctx.canvas.height = window.innerHeight;
+
+            // Creating new board
+            for (var k = 0; k < 12; k++)
+            {
+              hex.push(new Hex(size*3, sizeY*2+sizeY*2*k, size, hex.length-1, "soil",0,0,[]));
+
+              for (var i = 0; i < 14; i++)
+              {
+                for (var j = 0; j < 2 ; j++)
+                {
+                  if (j==0)
+                  {
+                    hex.push(newHex(hex[hex.length - 1], 3));
+                  }
+                  else
+                  {
+                    hex.push(newHex(hex[hex.length - 1], 2));
+                  }
+                }
+              }
+            }
+
+            // Adding neighbours
+            for (var i = 0; i < hex.length; i++)
+            {
+              hex[i].neighbour();
+            }
+
+            //Creating sea
+            hex[155].sea(6);
+
+            // Drawing a board
+            drawBoard();
+
+//-------------------------------------------------------------------------
+
+            function Hex(x,y,size,index,type,player,army, neighbours) {
+                this.x = x;
+                this.y = y;
+                this.index = index;
+                this.size = size;
+                this.type = type;
+                this.player = player
+                this.army = army;
+                this.neighbours = neighbours;
+
+                this.draw = function()
+                {
+                  switch(this.type)
+                  {
+                    case "water":
+                        ctx.fillStyle="blue";
+                        break;
+                    case "soil":
+                        ctx.fillStyle="brown";
+                        break;
+                  }
+
+                    var a = this.x + this.size;
+                    var b = this.y;
+                    var result = this.rotate(a, b, -60 * Math.PI/180);
+                    var c = result[0];
+                    var d = result[1];
+
+                    ctx.beginPath();
+                    ctx.moveTo(a, b);
+                    ctx.lineTo(c, d);
+
+                    // DO POPRAWY
+                    //---
+                    result = this.rotate(a, b, -120 * Math.PI/180);
+                    c = result[0];
+                    d = result[1];
+                    ctx.lineTo(c, d);
+
+                    result = this.rotate(a, b, -180 * Math.PI/180);
+                    c = result[0];
+                    d = result[1];
+                    ctx.lineTo(c, d);
+
+                    result = this.rotate(a, b, -240 * Math.PI/180);
+                    c = result[0];
+                    d = result[1];
+                    ctx.lineTo(c, d);
+
+                    result = this.rotate(a, b, -300 * Math.PI/180);
+                    c = result[0];
+                    d = result[1];
+                    ctx.lineTo(c, d);
+
+                    result = this.rotate(a, b, -360 * Math.PI/180);
+                    c = result[0];
+                    d = result[1];
+                    ctx.lineTo(c, d);
+                    //---
+
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.lineWidth=5;
+
+                    ctx.fillStyle = "white";
+                    ctx.fillText(index, this.x, this.y);
+                }
+
+                this.rotate = function(x, y, angle) {
+                    var result = [x,y];
+
+                    result[0] = (x - this.x) * Math.cos(angle) - (y - this.y) * Math.sin(angle) + this.x;
+                    result[1] = (x - this.x) * Math.sin(angle) - (y - this.y) * Math.cos(angle) + this.y;
+
+                    return result;
+                }
+
+                this.sea = function(x)
+                {
+                  if (x>0)
+                  {
+                    this.type = "water";
+                    var rnd = Math.floor((Math.random() * this.neighbours.length));
+
+                    for (var i = 0; i < rnd; i++)
+                    {
+                      x--;
+                      var k = Math.floor((Math.random() * rnd));
+                      alert(this.neighbours[k].index);
+                      //hex[this.neighbours[k].index].sea(x);
+                    }
+                  }
+
+
+                }
+
+                this.neighbour = function()
+                {
+                  for (var i = 0; i < neighbours_numbers.length; i++)
+                  {
+                    if ((this.index + neighbours_numbers[i]) > 0  && (this.index + neighbours_numbers[i]) < (hex.length - 1))
+                    {
+                      neighbours.push(hex[this.index + neighbours_numbers[i]]);
+                    }
+                  }
+
+                }
+            }
+
+
+            function drawBoard() {
+                for(var i = 0; i < hex.length; i++) {
+                    hex[i].draw();
+                }
+            }
+
+            // DO POPRAWY
+            function newHex(hexagon, n) {
+                if(n == 1) return (new Hex(hexagon.x, hexagon.y - 2 * sizeY, size, hex.length-1, "soil",0,0,[]));
+                if(n == 2) return (new Hex(hexagon.x + 1.5 * size, hexagon.y - sizeY, size,hex.length-1, "soil",0,0,[]));
+                if(n == 3) return (new Hex(hexagon.x + 1.5 * size, hexagon.y + sizeY, size,hex.length-1, "soil",0,0,[]));
+                if(n == 4) return (new Hex(hexagon.x, hexagon.y + 2 * sizeY, size,hex.length-1, "soil",0,0,[]));
+                if(n == 5) return (new Hex(hexagon.x - 1.5 * size, hexagon.y + sizeY, size,hex.length-1, "soil",0,0,[]));
+                if(n == 6) return (new Hex(hexagon.x - 1.5 * size, hexagon.y - sizeY, size,hex.length-1, "soil",0,0,[]));
+            }
+
+        </script>
+    </body>
+</html>
