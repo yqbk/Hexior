@@ -35,7 +35,7 @@ and open the template in the editor.
             // Creating new board
             for (var k = 0; k < 12; k++)
             {
-              hex.push(new Hex(size*3, sizeY*2+sizeY*2*k, size, hex.length-1, "soil",0,0,[]));
+              hex.push(new Hex(size*3, sizeY*2+sizeY*2*k, size, hex.length, "soil",0,0,[]));
 
               for (var i = 0; i < 14; i++)
               {
@@ -98,38 +98,17 @@ and open the template in the editor.
                     ctx.beginPath();
                     ctx.moveTo(a, b);
                     ctx.lineTo(c, d);
-
-                    // DO POPRAWY
-                    //---
-                    result = this.rotate(a, b, -120 * Math.PI/180);
-                    c = result[0];
-                    d = result[1];
-                    ctx.lineTo(c, d);
-
-                    result = this.rotate(a, b, -180 * Math.PI/180);
-                    c = result[0];
-                    d = result[1];
-                    ctx.lineTo(c, d);
-
-                    result = this.rotate(a, b, -240 * Math.PI/180);
-                    c = result[0];
-                    d = result[1];
-                    ctx.lineTo(c, d);
-
-                    result = this.rotate(a, b, -300 * Math.PI/180);
-                    c = result[0];
-                    d = result[1];
-                    ctx.lineTo(c, d);
-
-                    result = this.rotate(a, b, -360 * Math.PI/180);
-                    c = result[0];
-                    d = result[1];
-                    ctx.lineTo(c, d);
-                    //---
-
+					
+					for(var i = -120; i >= -360; i -= 60) {
+						result = this.rotate(a, b, i * Math.PI/180);
+						c = result[0];
+						d = result[1];
+						ctx.lineTo(c, d);
+					}
+                    
                     ctx.fill();
                     ctx.stroke();
-                    ctx.lineWidth=5;
+                    ctx.lineWidth = 3;
 
                     ctx.fillStyle = "white";
                     ctx.fillText(index, this.x, this.y);
@@ -144,8 +123,7 @@ and open the template in the editor.
                     return result;
                 }
 
-                this.sea = function(x)
-                {
+                this.sea = function(x) {
                   if (x>0)
                   {
                     this.type = "water";
@@ -155,7 +133,7 @@ and open the template in the editor.
                     {
                       x--;
                       var k = Math.floor((Math.random() * rnd));
-                      alert(this.neighbours[k].index);
+                      //alert(this.neighbours[k].index);
                       //hex[this.neighbours[k].index].sea(x);
                     }
                   }
@@ -183,14 +161,11 @@ and open the template in the editor.
                 }
             }
 
-            // DO POPRAWY
             function newHex(hexagon, n) {
-                if(n == 1) return (new Hex(hexagon.x, hexagon.y - 2 * sizeY, size, hex.length-1, "soil",0,0,[]));
-                if(n == 2) return (new Hex(hexagon.x + 1.5 * size, hexagon.y - sizeY, size,hex.length-1, "soil",0,0,[]));
-                if(n == 3) return (new Hex(hexagon.x + 1.5 * size, hexagon.y + sizeY, size,hex.length-1, "soil",0,0,[]));
-                if(n == 4) return (new Hex(hexagon.x, hexagon.y + 2 * sizeY, size,hex.length-1, "soil",0,0,[]));
-                if(n == 5) return (new Hex(hexagon.x - 1.5 * size, hexagon.y + sizeY, size,hex.length-1, "soil",0,0,[]));
-                if(n == 6) return (new Hex(hexagon.x - 1.5 * size, hexagon.y - sizeY, size,hex.length-1, "soil",0,0,[]));
+				var a = [0, 1.5, 1.5, 0, -1.5, -1.5];
+				var b = [-2, -1, 1, 2, 1, -1];
+				
+				return (new Hex(hexagon.x + a[n-1] * size, hexagon.y + b[n-1] * sizeY, size, hex.length, "soil", 0, 0, []));
             }
 
         </script>
