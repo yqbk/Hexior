@@ -27,17 +27,20 @@ and open the template in the editor.
             var hex = [];
             var sizeY = 25;
             var size = 2 * sizeY/Math.sqrt(3);
-            var neighbours_numbers = [-13,1,14,13,12,-1];
-
+			var inLineXfinal = 9; // Liczba hexów w poziomie
+			var inLineYfinal = 10; // Liczba hexów w pionie
+			// Wszystko jest zautomatyzowanie
+			
             ctx.canvas.width  = window.innerWidth;
             ctx.canvas.height = window.innerHeight;
 
             // Creating new board
-            for (var k = 0; k < 12; k++)
+            /*
+			for (var k = 0; k < inLineY; k++)
             {
               hex.push(new Hex(size*3, sizeY*2+sizeY*2*k, size, hex.length, "soil",0,0,[]));
 
-              for (var i = 0; i < 14; i++)
+              for (var i = 0; i < inLineX - 1; i++)
               {
                 for (var j = 0; j < 2 ; j++)
                 {
@@ -52,15 +55,37 @@ and open the template in the editor.
                 }
               }
             }
+			*/
+			
+			var inLineX = inLineXfinal * 2;
+			var inLineY = inLineYfinal - 1;
+			for(var i = 0; i < inLineX * inLineY; i += inLineY) {
+				if(i % (2 * inLineY) == 0) {
+					hex.push(new Hex(100 + i/inLineY * size * 1.5, 100, size, hex.length, "soil", 0, 0, []));
+				} else {
+					//alert(i);
+					hex.push(new Hex(100 + i/inLineY * size * 1.5, 100 + sizeY, size, hex.length, "soil", 0, 0, []));
+				}
+				for(var j = 0; j < inLineY; j++) {
+					hex.push(newHex(hex[hex.length - 1], 4));
+				}
+			}
+			
 
             // Adding neighbours
             for (var i = 0; i < hex.length; i++)
             {
               hex[i].neighbour();
             }
+			
+			
+			showNeighbours(80);
+			
+			//alert(temp(287));
+			
 
             //Creating sea
-            hex[155].sea(6);
+            //hex[155].sea(6);
 
             // Drawing a board
             drawBoard();
@@ -82,10 +107,10 @@ and open the template in the editor.
                   switch(this.type)
                   {
                     case "water":
-                        ctx.fillStyle="blue";
+                        ctx.fillStyle = "blue";
                         break;
                     case "soil":
-                        ctx.fillStyle="brown";
+                        ctx.fillStyle = "brown";
                         break;
                   }
 
@@ -111,6 +136,7 @@ and open the template in the editor.
                     ctx.lineWidth = 3;
 
                     ctx.fillStyle = "white";
+					ctx.font="10px Verdana";
                     ctx.fillText(index, this.x, this.y);
                 }
 
@@ -123,6 +149,7 @@ and open the template in the editor.
                     return result;
                 }
 
+				
                 this.sea = function(x) {
                   if (x>0)
                   {
@@ -143,14 +170,19 @@ and open the template in the editor.
 
                 this.neighbour = function()
                 {
-                  for (var i = 0; i < neighbours_numbers.length; i++)
-                  {
-                    if ((this.index + neighbours_numbers[i]) > 0  && (this.index + neighbours_numbers[i]) < (hex.length - 1))
-                    {
-                      neighbours.push(hex[this.index + neighbours_numbers[i]]);
-                    }
-                  }
-
+					var neighbours_numbers;
+					if(temp(this.index) % 2 == 0) {
+						neighbours_numbers = [-1, inLineYfinal - 1, inLineYfinal, 1, -inLineYfinal, -inLineYfinal - 1];
+					} else {
+						neighbours_numbers = [-1, inLineYfinal, inLineYfinal + 1, 1, -inLineYfinal + 1, -inLineYfinal];
+					}
+					
+					for (var i = 0; i < neighbours_numbers.length; i++) {
+						if ((this.index + neighbours_numbers[i]) > 0  && (this.index + neighbours_numbers[i]) < (hex.length - 1))
+						{
+							neighbours.push(hex[this.index + neighbours_numbers[i]]);
+						}
+					}
                 }
             }
 
@@ -167,6 +199,25 @@ and open the template in the editor.
 				
 				return (new Hex(hexagon.x + a[n-1] * size, hexagon.y + b[n-1] * sizeY, size, hex.length, "soil", 0, 0, []));
             }
+			
+			function showNeighbours(n) {
+				var result = [];
+				for(var i = 0; i < hex[n].neighbours.length; i++) {
+					result.push(hex[n].neighbours[i].index);
+				}
+				//alert(result);
+				ctx.font="20px Verdana";
+				ctx.fillText("Hex o indexie " + n + " ma sąsiadów o indexach: " + result, 50, 800);
+			}
+			
+			function temp(n) {
+				for(var i = 0; i < 2 * inLineXfinal; i++) {
+					if (n >= i * inLineYfinal && n < i * inLineYfinal + inLineYfinal) {
+						return i;
+					}
+				}
+				return 0;
+			}
 
         </script>
     </body>
