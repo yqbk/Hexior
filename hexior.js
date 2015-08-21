@@ -1,26 +1,34 @@
 
+paper.install(window);
+
 window.onload = function() {
 
-	// Get a reference to the canvas object
-		var canvas = document.getElementById('myCanvas');
-		// Create an empty project and a view for the canvas:
-		paper.setup(canvas);
-		// Create a Paper.js Path to draw a line into it:
-		
+// Get a reference to the canvas object
+var canvas = document.getElementById('myCanvas');
+// Create an empty project and a view for the canvas:
+paper.setup(canvas);
+// Create a Paper.js Path to draw a line into it:
 
 
+//-------------------Real Time--------------------------------------------------
+/*
+setInterval(function () {time(); drawBoard();}, 1000);
+
+function time()
+{
+	for (var i = 0; i < armies.length; i++)
+	{
+		if (armies[i].army < 15)
+		{
+			armies[i].incArmySize(1);
+		}
+	}
+}
+*/
 //-------------------Variables--------------------------------------------------
 
-//var c = document.getElementById("myCanvas");
-//var ctx = new fabric.Canvas('myCanvas');
-
-//var p = [200, 100];
-//var path = new fabric.Path('M 0 0 L ' + p[0] + ' ' + p[1] + ' L 170 200 z');
-
-//ctx.add(path);
-
-//var ctx = c.getContext("2d");
 var hex = [];
+var armies = []
 
 var sizeY = 25;
 var size = 2 * sizeY/Math.sqrt(3);
@@ -30,9 +38,6 @@ var inLineYfinal = 16; // Liczba hexów w pionie
 
 var inLineX = inLineXfinal * 2;
 var inLineY = inLineYfinal - 1;
-
-//ctx.canvas.width  = window.innerWidth;
-//ctx.canvas.height = window.innerHeight;
 
 
 //-------------------Map--------------------------------------------------------
@@ -87,11 +92,7 @@ createMap(4, 12, 10, 2);
 
 // Drawing a board
 drawBoard();
-//alert("fdsfds");
 
-//var lastColor;
-
-  
 
 //-------------------Hexagons---------------------------------------------------
 
@@ -108,119 +109,66 @@ function Hex(x,y,size,index,type,player,army,neighbours,path,color)
 	this.path = path;
 	this.color = color;
 
+	this.incArmySize = function(x)
+	{
+		this.army += x;
+	}
+
     this.draw = function() {
-		this.path = new paper.Path();
-		// Give the stroke a color
-		this.path.strokeColor = 'black';
+
+		this.path = new Path.RegularPolygon(new Point(this.x, this.y), 6, this.size);
+
 		this.path.strokeWidth = 3;
-		
+		this.path.strokeColor = 'black';
+
 		this.path.onMouseEnter = function() {
 			this.strokeColor = 'yellow';
 		}
-		
+
 		this.path.onMouseLeave = function() {
 			this.strokeColor = 'black';
 		}
-		
-		
-		
-        var a = this.x + this.size;
-        var b = this.y;
-        var result = this.rotate(a, b, -60 * Math.PI/180);
-        var p = [];
-		//p.push(result[0]);
-        //p.push(result[1]);
-		this.path.moveTo(a,b);
-		this.path.lineTo(result[0], result[1]);
-		
-        for(var i = -120; i >= -360; i -= 60) 
-		{
-            result = this.rotate(a, b, i * Math.PI/180);
-            //p.push(result[0]);
-            //p.push(result[1]);
-			this.path.lineTo(result[0], result[1]);
-            
-        }
-		
-		
-		// Move to start and draw a line from there
-		//path.moveTo(a,b);
-		// Note that the plus operator on Point objects does not work
-		// in JavaScript. Instead, we need to call the add() function:
-		//path.lineTo(p[0], p[1]);
-		//path.lineTo(p[2], p[3]);
-		//path.lineTo(p[4], p[5]);
-		//path.lineTo(p[6], p[7]);
-		//path.lineTo(p[8], p[9]);
-		//path.lineTo(p[10], p[11]);
-		// Draw the view now:
-		
-	
-		//var path = new fabric.Path('M ' + a + ' ' + b + ' L ' + p[0] + ' ' + p[1] + 'L ' + p[2] + ' ' + p[3] + 'L ' + p[4] + ' ' + p[5] + 'L ' + p[6] + ' ' + p[7] + 'L ' + p[8] + ' ' + p[9] + 'L ' + p[10] + ' ' + p[11] + ' z');
 
-		//path.set({ fill: 'red', stroke: 'green', opacity: 0.5 });
-		//path.set({ strokeWidth: 3, stroke: 'black', selectable: false});
-        
+
 		switch(this.type)
         {
             case "water":
-				//path.set({ fill: 'blue'});
 				this.path.fillColor = 'blue';
-                //ctx.fillStyle = "blue";
-                //ctx.fill();
-                //ctx.stroke();
-                //ctx.lineWidth = 3;
-				//ctx.add(path);
+				this.path.strokeWidth = 3;
                 break;
             case "soil":
-				//path.set({ fill: 'brown'});
-				this.path.fillColor = 'brown';
-                //ctx.fillStyle = "brown";
-                //ctx.fill();
-                //ctx.stroke();
-                //ctx.lineWidth = 3;
-				//ctx.add(path);
+				this.path.fillColor = '#996633';
+				this.path.strokeWidth = 3;
                 break;
             case "city":
-				//path.set({ fill: 'grey'});
 				this.path.fillColor = 'grey';
-                //ctx.fillStyle = "grey";
-                //ctx.fill();
-                //ctx.stroke();
-                //ctx.lineWidth = 3;
-                //ctx.beginPath();
-				//circle = new fabric.Circle({ radius: 15, fill: 'green', left: this.x - 16, top: this.y - 16, strokeWidth: 5, stroke: '#003300', selectable: false});
-				//ctx.add(path);
-				//ctx.add(circle);
-                //ctx.arc(this.x, this.y, 15, 0, 2 * Math.PI, false);
-                //ctx.fillStyle = 'green';
-                //ctx.fill();
-                //ctx.lineWidth = 5;
-                //ctx.strokeStyle = '#003300';
-                //ctx.stroke();
-                //ctx.fillStyle = "white";
-                //ctx.font = "15px Verdana";
-                //ctx.fillText(index, this.x - this.size/2, this.y);
+
+				armies.push(this)
+
+				var circle = new Path.Circle(new Point(this.x, this.y), this.army);
+				circle.fillColor = '#FF0000';
+
+				/*
+				circle.style = {
+				    strokeColor: 'black',
+				    dashArray: [4, 10],
+				    strokeWidth: 4,
+				    strokeCap: 'round'
+				};
+				*/
+
+				var text = new PointText({
+				    point: [this.x, this.y],
+				    content: army,
+				    fillColor: 'black',
+				    fontFamily: 'Courier New',
+				    fontWeight: 'bold',
+				    fontSize: 15
+				});
+
                 break;
         }
-		
-        //Numery klocków
-        //ctx.fillStyle = "white";
-        //ctx.font="10px Verdana";
-        //ctx.fillText(index, this.x, this.y);
-		
     }
-
-    this.rotate = function(x, y, angle)
-    {
-        var result = [x,y];
-
-        result[0] = (x - this.x) * Math.cos(angle) - (y - this.y) * Math.sin(angle) + this.x;
-        result[1] = (x - this.x) * Math.sin(angle) - (y - this.y) * Math.cos(angle) + this.y;
-
-        return result;
-    }
-
 
     this.sea = function(x)
     {
@@ -280,8 +228,7 @@ function drawBoard()
     {
         hex[i].draw();
     }
-	//ctx.renderAll();
-	paper.view.draw();
+	view.draw();
 }
 
 function newHex(hexagon, n)
@@ -289,7 +236,7 @@ function newHex(hexagon, n)
     var a = [0, 1.5, 1.5, 0, -1.5, -1.5];
     var b = [-2, -1, 1, 2, 1, -1];
 
-    return (new Hex(hexagon.x + a[n-1] * size, hexagon.y + b[n-1] * sizeY, size, hex.length, "soil", 0, 0, [], 0, 0));
+    return (new Hex(hexagon.x + a[n-1] * size, hexagon.y + b[n-1] * sizeY, size, hex.length, "soil", 0, 10, [], 0, 0));
 }
 
 function showNeighbours(n)
@@ -300,9 +247,6 @@ function showNeighbours(n)
     {
         result.push(hex[n].neighbours[i].index);
     }
-    //alert(result);
-    //ctx.font="20px Verdana";
-    //ctx.fillText("Hex o indexie " + n + " ma sąsiadów o indexach: " + result, 50, 950);
 }
 
 function temp(n)
