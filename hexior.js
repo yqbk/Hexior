@@ -2,8 +2,15 @@
 
 //-------------------Variables--------------------------------------------------
 
-var c = document.getElementById("myCanvas");
-var ctx = c.getContext("2d");
+//var c = document.getElementById("myCanvas");
+var ctx = new fabric.Canvas('myCanvas');
+
+//var p = [200, 100];
+//var path = new fabric.Path('M 0 0 L ' + p[0] + ' ' + p[1] + ' L 170 200 z');
+
+//ctx.add(path);
+
+//var ctx = c.getContext("2d");
 var hex = [];
 
 var sizeY = 25;
@@ -15,8 +22,9 @@ var inLineYfinal = 16; // Liczba hexów w pionie
 var inLineX = inLineXfinal * 2;
 var inLineY = inLineYfinal - 1;
 
-ctx.canvas.width  = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+//ctx.canvas.width  = window.innerWidth;
+//ctx.canvas.height = window.innerHeight;
+
 
 //-------------------Map--------------------------------------------------------
 
@@ -46,8 +54,6 @@ for (var i = 0; i < hex.length; i++)
 //Create map
 function createMap(seasCount, maxSeaSize, citiesCount, players)
 {
-
-
     //Seas
     for (var i = 0; i < seasCount; i++)
     {
@@ -72,6 +78,24 @@ createMap(4, 12, 10, 2);
 
 // Drawing a board
 drawBoard();
+//alert("fdsfds");
+
+//var lastColor;
+
+
+
+ctx.on('mouse:over', function(e) {
+	ctx.bringToFront(e.target);
+    e.target.setStroke('yellow');
+    ctx.renderAll();
+  });
+  
+ctx.on('mouse:out', function(e) {
+	ctx.sendToBack(e.target);
+	e.target.setStroke('black');
+    ctx.renderAll();
+  });
+  
 
 //-------------------Hexagons---------------------------------------------------
 
@@ -86,65 +110,71 @@ function Hex(x,y,size,index,type,player,army,neighbours)
     this.army = army;
     this.neighbours = neighbours;
 
-    this.draw = function()
-    {
+    this.draw = function() {
         var a = this.x + this.size;
         var b = this.y;
         var result = this.rotate(a, b, -60 * Math.PI/180);
-        var c = result[0];
-        var d = result[1];
-
-        ctx.beginPath();
-        ctx.moveTo(a, b);
-        ctx.lineTo(c, d);
-
-        for(var i = -120; i >= -360; i -= 60)
-        {
+        var p = [];
+		p.push(result[0]);
+        p.push(result[1]);
+		
+        for(var i = -120; i >= -360; i -= 60) 
+		{
             result = this.rotate(a, b, i * Math.PI/180);
-            c = result[0];
-            d = result[1];
-            ctx.lineTo(c, d);
+            p.push(result[0]);
+            p.push(result[1]);
+            
         }
+	
+		var path = new fabric.Path('M ' + a + ' ' + b + ' L ' + p[0] + ' ' + p[1] + 'L ' + p[2] + ' ' + p[3] + 'L ' + p[4] + ' ' + p[5] + 'L ' + p[6] + ' ' + p[7] + 'L ' + p[8] + ' ' + p[9] + 'L ' + p[10] + ' ' + p[11] + ' z');
 
+		//path.set({ fill: 'red', stroke: 'green', opacity: 0.5 });
+		path.set({ strokeWidth: 3, stroke: 'black', selectable: false});
         switch(this.type)
         {
             case "water":
-                ctx.fillStyle = "blue";
-                ctx.fill();
-                ctx.stroke();
-                ctx.lineWidth = 3;
+				path.set({ fill: 'blue'});
+                //ctx.fillStyle = "blue";
+                //ctx.fill();
+                //ctx.stroke();
+                //ctx.lineWidth = 3;
+				ctx.add(path);
                 break;
             case "soil":
-                ctx.fillStyle = "brown";
-                ctx.fill();
-                ctx.stroke();
-                ctx.lineWidth = 3;
+				path.set({ fill: 'brown'});
+                //ctx.fillStyle = "brown";
+                //ctx.fill();
+                //ctx.stroke();
+                //ctx.lineWidth = 3;
+				ctx.add(path);
                 break;
             case "city":
-                ctx.fillStyle = "grey";
-                ctx.fill();
-                ctx.stroke();
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 15, 0, 2 * Math.PI, false);
-                ctx.fillStyle = 'green';
-                ctx.fill();
-                ctx.lineWidth = 5;
-                ctx.strokeStyle = '#003300';
-                ctx.stroke();
-                ctx.fillStyle = "white";
-                ctx.font="15px Verdana";
-                ctx.fillText(index, this.x - this.size/2, this.y);
+				path.set({ fill: 'grey'});
+                //ctx.fillStyle = "grey";
+                //ctx.fill();
+                //ctx.stroke();
+                //ctx.lineWidth = 3;
+                //ctx.beginPath();
+				circle = new fabric.Circle({ radius: 15, fill: 'green', left: this.x - 16, top: this.y - 16, strokeWidth: 5, stroke: '#003300', selectable: false});
+				ctx.add(path);
+				ctx.add(circle);
+                //ctx.arc(this.x, this.y, 15, 0, 2 * Math.PI, false);
+                //ctx.fillStyle = 'green';
+                //ctx.fill();
+                //ctx.lineWidth = 5;
+                //ctx.strokeStyle = '#003300';
+                //ctx.stroke();
+                //ctx.fillStyle = "white";
+                //ctx.font = "15px Verdana";
+                //ctx.fillText(index, this.x - this.size/2, this.y);
                 break;
         }
-
-
-
-        /* Numery klocków
-        ctx.fillStyle = "white";
-        ctx.font="10px Verdana";
-        ctx.fillText(index, this.x, this.y);
-        */
+		
+        //Numery klocków
+        //ctx.fillStyle = "white";
+        //ctx.font="10px Verdana";
+        //ctx.fillText(index, this.x, this.y);
+	
     }
 
     this.rotate = function(x, y, angle)
@@ -216,6 +246,7 @@ function drawBoard()
     {
         hex[i].draw();
     }
+	ctx.renderAll();
 }
 
 function newHex(hexagon, n)
