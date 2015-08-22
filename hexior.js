@@ -44,11 +44,11 @@ for(var i = 0; i < inLineX * inLineY; i += inLineY)
 {
     if(i % (2 * inLineY) == 0)
     {
-        hex.push(new Hex(100 + i/inLineY * sizeY, 100, size, hex.length, "soil", 0, 0, [], 0 ,0 ));
+        hex.push(new Hex(100 + i/inLineY * sizeY, 100, size, hex.length, "soil", []));
     }
     else
     {
-        hex.push(new Hex(100 + i/inLineY * sizeY, 100 + 1.5 * size, size, hex.length, "soil", 0, 0, [], 0 ,0));
+        hex.push(new Hex(100 + i/inLineY * sizeY, 100 + 1.5 * size, size, hex.length, "soil", []));
     }
 
     for(var j = 0; j < inLineY; j++)
@@ -93,65 +93,170 @@ drawBoard();
 
 //showNeighbours(229);
 
+var border = new Path.RegularPolygon(new Point(0, 0), 6, hex[0].size);
+border.strokeColor = 'yellow';
+border.strokeWidth = 3;
+
+hex[50].incArmySize(9);
+hex[58].incArmySize(12);
+hex[65].incArmySize(17);
+hex[51].incArmySize(5);
+hex[48].incArmySize(8);
+
+
+view.update();
+
+//-------------------Player---------------------------------------------------
+
+function Player() {
+	
+}
 
 //-------------------Hexagons---------------------------------------------------
 
-function Hex(x,y,size,index,type,player,army,neighbours,path,color)
+function Hex(x,y,size,index,type,neighbours)
 {
     this.x = x;
     this.y = y;
     this.index = index;
     this.size = size;
     this.type = type;
-    this.player = player
-    this.army = army;
+    this.player = 0
+    this.army = 0;
     this.neighbours = neighbours;
-	this.path = path;
-	this.color = color;
+	this.path = 0;
+	this.color = 0;
+	this.pressed = false;
+	this.armyText = 0;
+	this.border = 0;
+	this.addArmy = false;
+	this.armyFrom = 0;
+	this.mark = 0;
+	somethingClicked = false;
+	
 
+	this.addEvents = function(data) {
+		var self = this;
+		data.onMouseEnter = function() {
+			self.enterEvent();
+		}
+
+		data.onMouseLeave = function() {
+			self.leaveEvent();
+		}
+		
+		data.onClick = function() {
+			self.clickEvent();
+		}
+	}
+	
+	
 	this.incArmySize = function(x)
 	{
 		this.army += x;
+		this.path.insertBelow(this.armyText);
+		this.armyText.content = this.army;
 	}
-
+	
+	this.decArmySize = function(x)
+	{
+		this.army -= x;
+		if(this.army <= 0) this.armyText.insertBelow(this.path);
+		this.armyText.content = this.army;
+	}
+	
+	this.clickEvent = function() {
+		var self = this;
+		if(self.pressed == true) {
+				self.pressed = false;
+				self.mark.remove();
+				
+				for(var i = 0; i < self.neighbours.length; i++) {
+					//self.neighbours[i].path.fillColor = self.neighbours[i].color;
+					self.neighbours[i].mark.remove();
+					self.neighbours[i].addArmy = false;
+					somethingClicked = false;
+				}
+			} else {
+				//
+				
+				if(self.addArmy) {
+					if(self.armyFrom.army > 0 && self.army >= 0) {
+						self.incArmySize(1);
+						self.armyFrom.decArmySize(1);
+						if(self.army > 0) {
+							self.path.insertBelow(self.mark);
+							self.armyText.insertAbove(self.mark);
+						}
+					}
+				} else if(!somethingClicked){
+					self.pressed = true;
+					somethingClicked = true;
+					self.color = self.path.fillColor;
+					//self.path.fillColor = "#FFFF33";
+					self.mark = new Path.RegularPolygon(new Point(self.x, self.y), 6, self.size);
+					self.mark.fillColor = "yellow";
+					self.mark.opacity = 0.5;
+					self.addEvents(self.mark);
+					if(self.army > 0) self.armyText.insertAbove(self.mark);
+					
+					for(var i = 0; i < self.neighbours.length; i++) {
+						self.neighbours[i].color = self.neighbours[i].path.fillColor;
+						//self.neighbours[i].path.fillColor = "#FFFF33";
+						self.neighbours[i].mark = new Path.RegularPolygon(new Point(self.neighbours[i].x, self.neighbours[i].y), 6, self.neighbours[i].size);
+						self.neighbours[i].mark.fillColor = "yellow";
+						self.neighbours[i].mark.opacity = 0.5;
+						self.neighbours[i].addEvents(self.neighbours[i].mark);
+						if(self.neighbours[i].army > 0) self.neighbours[i].armyText.insertAbove(self.neighbours[i].mark);
+						self.neighbours[i].addArmy = true;
+						self.neighbours[i].armyFrom = self;
+					}
+				}
+			}
+	}
+	
+	this.enterEvent = function() {
+		var self = this;
+		border.position = [self.x, self.y];
+		//self.border = new Path.RegularPolygon(new Point(self.x, self.y), 6, self.size);
+		//self.border.strokeColor = 'yellow';
+		//self.border.strokeWidth = 3;
+	}
+	
+	this.leaveEvent = function() {
+		//var self = this;
+		//self.border.remove();
+	}
+	
+	
     this.draw = function() {
+		var self = this;
 		
 		this.path = new Path.RegularPolygon(new Point(this.x, this.y), 6, this.size);
-
+		
 		this.path.strokeWidth = 3;
 		this.path.strokeColor = 'black';
 
-		var self = this;
-		this.path.onMouseEnter = function() {
-			this.strokeColor = 'yellow';
-			//alert(self.index);
-			for(var i = 0; i < self.neighbours.length; i++) {
-				self.neighbours[i].path.insertBelow(self.path);
-			}
-		}
+		this.addEvents(this.path);
 
-		this.path.onMouseLeave = function() {
-			this.strokeColor = 'black';
-		}
-
-
+	
 		switch(this.type)
         {
             case "water":
-				this.path.fillColor = 'blue';
+				this.path.fillColor = '#0080FF';
 				this.path.strokeWidth = 3;
                 break;
             case "soil":
-				this.path.fillColor = '#996633';
+				this.path.fillColor = '#468B01';
 				this.path.strokeWidth = 3;
                 break;
             case "city":
-				this.path.fillColor = 'grey';
+				this.path.fillColor = 'red';
 
-				armies.push(this)
+				//armies.push(this);
 
-				var circle = new Path.Circle(new Point(this.x, this.y), this.army);
-				circle.fillColor = '#FF0000';
+				//var circle = new Path.Circle(new Point(this.x, this.y), this.army);
+				//circle.fillColor = '#FF0000';
 
 				/*
 				circle.style = {
@@ -161,28 +266,23 @@ function Hex(x,y,size,index,type,player,army,neighbours,path,color)
 				    strokeCap: 'round'
 				};
 				*/
-
-				var text = new PointText({
-				    point: [this.x, this.y],
-				    content: this.army,
-				    fillColor: 'black',
-				    fontFamily: 'Courier New',
-				    fontWeight: 'bold',
-				    fontSize: 15
-				});
-
                 break;
         }
-		/*
-		var text = new PointText({
-				    point: [this.x - this.size/2, this.y],
-				    content: this.index,
-				    fillColor: 'black',
-				    fontFamily: 'Courier New',
-				    fontWeight: 'bold',
-				    fontSize: 15
-				});
-				*/
+		
+		this.armyText = new PointText({
+			point: [this.x, this.y],
+			content: this.army,
+			fillColor: 'black',
+			fontFamily: 'Courier New',
+			fontWeight: 'bold',
+			fontSize: 20,
+			justification: 'center'
+		});
+		
+		this.armyText.insertBelow(this.path);
+		
+		this.addEvents(this.armyText);
+
     }
 
     this.sea = function(x)
@@ -248,13 +348,15 @@ function drawBoard()
 
 function newHex(hexagon, n)
 {
-    var a = [0, 1.5, 1.5, 0, -1.5, -1.5];
-    var b = [-2, -1, 1, 2, 1, -1];
+    //var a = [0, 1.5, 1.5, 0, -1.5, -1.5];
+    //var b = [-2, -1, 1, 2, 1, -1];
 
     //return (new Hex(hexagon.x + a[n-1] * size, hexagon.y + b[n-1] * sizeY, size, hex.length, "soil", 0, 10, [], 0, 0));
 	
 	n = 4;
-	return (new Hex(hexagon.x + a[n-1] * sizeY, hexagon.y + b[n-1] * 1.5 * size, size, hex.length, "soil", 0, 10, [], 0, 0));
+	a = 0;
+	b = 2;
+	return (new Hex(hexagon.x + a * sizeY, hexagon.y + b * 1.5 * size, size, hex.length, "soil", []));
 }
 
 function showNeighbours(n)
