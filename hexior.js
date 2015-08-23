@@ -97,31 +97,42 @@ var border = new Path.RegularPolygon(new Point(0, 0), 6, hex[0].size);
 border.strokeColor = 'yellow';
 border.strokeWidth = 3;
 
-hex[50].incArmySize(9);
-hex[58].incArmySize(12);
-hex[65].incArmySize(17);
-hex[51].incArmySize(5);
-hex[48].incArmySize(8);
+hex[50].incArmySize(14);
+hex[58].incArmySize(19);
 
+var player1 = new Player(1, "marek", "purple");
+var player2 = new Player(2, "kuba", "pink");
+
+player1.take(hex[50]);
+player2.take(hex[58]);
 
 view.update();
 
 //-------------------Player---------------------------------------------------
 
-function Player() {
+function Player(id, name, color) {
+	this.id = id;
+	this.name = name;
+	this.color = color;
 	
+	this.take = function(hex) {
+		hex.player = this;
+		hex.path.fillColor = this.color;
+		//hex.incArmySize(1);
+		//hex.armyFrom.decArmySize(1);
+	}
 }
 
 //-------------------Hexagons---------------------------------------------------
 
-function Hex(x,y,size,index,type,neighbours)
+function Hex(x, y, size, index, type, neighbours)
 {
     this.x = x;
     this.y = y;
     this.index = index;
     this.size = size;
     this.type = type;
-    this.player = 0
+    this.player = 0;
     this.army = 0;
     this.neighbours = neighbours;
 	this.path = 0;
@@ -133,6 +144,48 @@ function Hex(x,y,size,index,type,neighbours)
 	this.armyFrom = 0;
 	this.mark = 0;
 	somethingClicked = false;
+	
+	this.fight = function(hexFrom, hexTo) {
+		var taken = false;
+		if(hexTo.army == 0) {
+			taken = true;
+		} else if(hexFrom.army > hexTo.army) {
+			var rnd;
+			if(hexFrom.army > 2 * hexTo.army) {
+				rnd = Math.floor(Math.random() * 1);
+			} else {
+				rnd = Math.floor(Math.random() * 2);
+			}
+			if(rnd == 0) {
+				taken = true;
+				hexTo.army = 0;
+			}
+		} else {
+			var rnd;
+			if(hexTo.army == hexFrom.army) {
+				rnd = Math.floor(Math.random() * 2);
+			} else if(hexTo.army < 2 * hexFrom.army) {
+				rnd = Math.floor(Math.random() * 5);
+			} else {
+				rnd = Math.floor(Math.random() * 10);
+			}
+			if(rnd == 0) {
+				taken = true;
+				hexTo.army = 0;
+			}
+		}
+		
+		hexFrom.decArmySize(1);
+		if(taken) {
+			hexFrom.player.take(hexTo);
+			hexTo.incArmySize(1);
+			if(hexTo.army > 0) {
+				hexTo.path.insertBelow(hexTo.mark);
+				hexTo.armyText.insertAbove(hexTo.mark);
+				border.insertAbove(hexTo.armyText);
+			}
+		}
+	}
 	
 
 	this.addEvents = function(data) {
@@ -181,12 +234,18 @@ function Hex(x,y,size,index,type,neighbours)
 				//
 				
 				if(self.addArmy) {
-					if(self.armyFrom.army > 0 && self.army >= 0) {
-						self.incArmySize(1);
-						self.armyFrom.decArmySize(1);
-						if(self.army > 0) {
-							self.path.insertBelow(self.mark);
-							self.armyText.insertAbove(self.mark);
+					if(self.armyFrom.army > 0 && self.army >= 0 && self.armyFrom.player != 0) {
+						if(self.player == 0 || self.player == self.armyFrom.player) {
+							self.incArmySize(1);
+							self.armyFrom.decArmySize(1);
+							if(self.army > 0) {
+								self.path.insertBelow(self.mark);
+								self.armyText.insertAbove(self.mark);
+								border.insertAbove(self.armyText);
+							}
+							self.armyFrom.player.take(self);
+						} else {
+							self.fight(self.armyFrom, self);
 						}
 					}
 				} else if(!somethingClicked){
@@ -268,6 +327,7 @@ function Hex(x,y,size,index,type,neighbours)
 				*/
                 break;
         }
+		
 		
 		this.armyText = new PointText({
 			point: [this.x, this.y],
