@@ -28,8 +28,8 @@ var armies = []
 var sizeY = 25;
 var size = 2 * sizeY/Math.sqrt(3);
 
-var inLineXfinal = 10; // Liczba hexów w poziomie
-var inLineYfinal = 5; // Liczba hexów w pionie
+var inLineXfinal = 20; // Liczba hexów w poziomie
+var inLineYfinal = 6; // Liczba hexów w pionie
 
 var inLineX = inLineXfinal * 2;
 var inLineY = inLineYfinal - 1;
@@ -37,7 +37,7 @@ var inLineY = inLineYfinal - 1;
 var viewX = size;
 var viewY = size;
 
-var inControl = false;
+var inControl = true;
 var somethingClicked = false;
 //-------------------Map--------------------------------------------------------
 
@@ -98,10 +98,10 @@ var border = new Path.RegularPolygon(new Point(0, 0), 6, hex[0].size);
 border.strokeColor = 'yellow';
 border.strokeWidth = 3;
 
-//hex[50].incArmySize(14);
-//hex[58].incArmySize(19);
+hex[50].incArmySize(14);
+hex[58].incArmySize(19);
 
-var beginning = true;
+var beginning = false;
 
 var r = Math.floor(Math.random() * 255);
 var g = Math.floor(Math.random() * 255);
@@ -111,11 +111,11 @@ var you = new Player(4, yourName, "rgb(" + r + ", " + g + ", " + b + ")");
 
 sendWelcome();
 
-//var player1 = new Player(1, "marek", "purple");
-//var player2 = new Player(2, "kuba", "pink");
+var player1 = new Player(1, "marek", "purple");
+var player2 = new Player(2, "kuba", "pink");
 
-//player1.take(hex[50]);
-//player2.take(hex[58]);
+player1.take(hex[50]);
+player2.take(hex[58]);
 
 canvas.width = hex[hex.length - 1].x + size;
 canvas.height = hex[hex.length - 1].y + size;
@@ -163,7 +163,7 @@ tool.onMouseDrag = function(event) {
 	startY = event.point.y;
 
 }
-*/
+
 
 var beginnerTip = new PointText({
 	point: [canvas.width/2, 150],
@@ -206,7 +206,7 @@ var information = new PointText({
 	justification: 'center'
 	});
 
-
+*/
 view.update();
 
 
@@ -484,7 +484,7 @@ function Hex(x, y, size, index, type, neighbours)
 								self.fight(self.armyFrom, self);
 							}
 						}
-					} else if(!somethingClicked && self.player != 0 && self.player.name == you.name){
+					} else if(!somethingClicked /*&& self.player != 0 && self.player.name == you.name*/){
 						self.pressed = true;
 						somethingClicked = true;
 						self.color = self.path.fillColor;

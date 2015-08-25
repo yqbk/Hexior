@@ -1,14 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+	<title>Bootstrap Case</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
 <!-- Load the Paper.js library -->
 <script type="text/javascript" src="public/	paper.js\docs\assets\js\paper.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 <!-- Define inlined JavaScript -->
 <script type="text/javascript" src="public/hexior.js"></script>
+
+<style>
+	body
+	{
+		text-align: center;
+	}
+</style>
+
 </head>
 <body>
+	<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Hexior</a>
+    </div>
+    <div>
+      <ul class="nav navbar-nav">
+		  <li class="active"><a href="hexior.html">Game</a></li>
+  		<li><a href="#">Single</a></li>
+          <li><a href="creator.html">Creator</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
 	<canvas id="myCanvas" width="2000" height="2000"></canvas>
 </body>
 </html>

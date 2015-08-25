@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Bootstrap Case</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="public/	paper.js\docs\assets\js\paper.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<!-- Define inlined JavaScript -->
+<script type="text/javascript" src="public/creator.js"></script>
+
+<style>
+	body
+	{
+		text-align: center;
+	}
+
+	.buttons
+	{
+		width: 80%;
+	}
+
+	.slider
+	{
+		width: 20%;
+	}
+
+	#map
+	{
+		display: none;
+	}
+
+
+</style>
+
+</head>
+<body>
+
+<image src="public/mapa.png" id='map'>
+
+	<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Hexior</a>
+    </div>
+    <div>
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="hexior.html">Game</a></li>
+		<li><a href="#">Single</a></li>
+        <li><a href="creator.html">Creator</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="row">
+				<div class="col-sm-8">
+			<canvas id="myCanvas" width="2000" height="2000"></canvas>
+		</div>
+		<div class="col-sm-4">
+
+			<div class="btn-group-vertical buttons">
+			  <button type="button" class="btn btn-primary fieldTypes" id="soil">Soil</button>
+			  <button type="button" class="btn btn-primary fieldTypes" id="water">Water</button>
+			  <button type="button" class="btn btn-primary fieldTypes" id="city">City</button>
+			</div>
+
+			<div data-role="page">
+			  <div data-role="header">
+			    <h1>Slider Control</h1>
+			  </div>
+
+			  <div data-role="main" class="ui-content slider">
+			    <form method="post" action="demoform.asp">
+			      <label for="points">Points:</label>
+			      <input type="range" name="points" id="points" value="50" min="0" max="100">
+			      <input type="submit" data-inline="true" value="Submit">
+			    </form>
+			  </div>
+			</div>
+		</div>
+
+
+
+
+
+</div>
+
+
+</body>
+</html>
