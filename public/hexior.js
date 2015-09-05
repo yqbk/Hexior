@@ -2,24 +2,24 @@ var socket = io();
 
 paper.install(window);
 
-var yourName = prompt("Your name");
-window.onload = function() {
 
+window.onload = function() {
 
 var canvas = document.getElementById('myCanvas');
 paper.setup(canvas);
 
 var tool = new Tool();
 
+
 //-------------------Variables--------------------------------------------------
 
 var hex = [];
 
-var sizeY = 25;
+var sizeY = 22;
 var size = 2 * sizeY/Math.sqrt(3);
 
-var inLineXfinal = 35; // Liczba hexów w poziomie
-var inLineYfinal = 10; // Liczba hexów w pionie
+var inLineXfinal = 34; // Liczba hexów w poziomie
+var inLineYfinal = 12; // Liczba hexów w pionie
 
 var inLineX = inLineXfinal * 2;
 var inLineY = inLineYfinal - 1;
@@ -28,6 +28,11 @@ var viewX = size;
 var viewY = size; 
 
 var inControl = true;
+
+var maximumNumberOfMoves = 6;
+var currentNumberOfMoves = 0;
+
+var lastNode = -1;
 
 //-------------------Map--------------------------------------------------------
 
@@ -87,26 +92,23 @@ var border = new Path.RegularPolygon(new Point(0, 0), 6, hex[0].size);
 border.strokeColor = 'yellow';
 border.strokeWidth = 3;
 
-var beginning = true;
-
 var r = Math.floor(Math.random() * 255);
 var g = Math.floor(Math.random() * 255);
 var b = Math.floor(Math.random() * 255);
 
-var you = new Player(4, yourName, "rgb("+ r +", "+ g +", "+ b +")");
 
-sendWelcome();
+
 
 
 //Example players
-hex[50].incArmySize(14);
-hex[58].incArmySize(19);
+//hex[50].incArmySize(14);
+//hex[58].incArmySize(19);
 
-var player1 = new Player(1, "marek", "purple");
-var player2 = new Player(2, "kuba", "pink");
+//var player1 = new Player(1, "marek", "purple");
+//var player2 = new Player(2, "kuba", "pink");
 
-player1.take(hex[50]);
-player2.take(hex[58]);
+//player1.take(hex[50]);
+//player2.take(hex[58]);
 
 
 //Dimensions
@@ -118,51 +120,59 @@ var HEIGHT = screen.height;
 
 
 //Credits
-var beginnerTip = new PointText({
-	point: [canvas.width/2, 150],
-	content: "Choose your start point",
-	fontSize: 20,
-	});
-
-var actualPlayer = new PointText({
-	point: [canvas.width/2, 100],
-	content: "Player's name",
-	fontSize: 40,
-	});
-	
-	
-var currentTime = new PointText({
-	point: [50, 100],
-	content: "timer",
-	fontSize: 40,
-	});
-	
-var information = new PointText({
-	point: [canvas.width/2, 50],
-	content: "info",
-	fontSize: 20,
-	});
-	
-var credits = new Group([beginnerTip, actualPlayer, currentTime, information]);
-credits.fillColor = 'black';
-credits.fontFamily ='Courier New';
-credits.fontWeight = 'bold';
-credits.justification ='center';
-
+var somethingInLightenUp = false;
 
 //Initial update
 view.update();
 
+//Creating a map
+
+/*
+var mapScale = 0.1;
+var map = new Group();
+
+for(var i = 0; i < hex.length; i++) {
+	map.addChild(hex[i].path.clone());
+}
+
+map.scale(mapScale);
+map.position = new Point(canvas.width * mapScale/2, canvas.height * mapScale/2);
+
+map.onClick = function(event) {
+	//alert(event.point);
+	canvasMove(event.point.x - canvas.width * mapScale/2, canvas.height * mapScale/2 - event.point.y);
+	map.position = new Point(canvas.width * mapScale/2, canvas.height * mapScale/2);
+}
+*/
 
 //Start receiving messges from server
 receiveMsg();
+
+//w budowie
+//$("#message").prop('disabled', true);
+//$("#submit").prop('disabled', true);
+
+
+//var back = new Path.Rectangle(new Rectangle(new Point(0, 0), new Point(canvas.width, canvas.height)));
+//back.fillColor = '#e9e9ff';
+//back.opacity = 0.5;
+
+//var yourName = prompt("Your name");
+var yourName = Math.floor(Math.random() * 10000);
+
+var you = new Player(4, yourName, "rgb("+ r +", "+ g +", "+ b +")");
+
+sendWelcome();
+
+
+//$("input").prop('disabled', false);
 
 //-------------------Client - Server-----------------------------------------
 
 function Message(player, index, army, possesion) {
 	this.player = player;
 	this.index = index;
-	this.armyText.content = army;
+	this.army = army;
 	this.possesion = possesion;
 }
 
@@ -171,6 +181,12 @@ function Hexy(type, color, player, army) {
 	this.color = color;
 	this.player = player;
 	this.army = army;
+}
+
+function Chat(name, color, text) {
+	this.name = name;
+	this.color = color;
+	this.text = text;
 }
 
 function sendWelcome() {
@@ -188,7 +204,68 @@ function sendMsg(hex) {
 	socket.emit('message', msg);
 }
 
+function sendLog(msg) {
+	socket.emit('log', msg);
+}
+
+function playersFight(playerFrom, playerTo, numberFrom, numberTo, hexFrom, hexTo, result) {
+	return '<li class="list-group-item">' +
+			'<b style="color:' + playerFrom.color + '">' + playerFrom.name + '</b>(' + numberFrom + ') attacked ' +
+			'<b style="color:' + playerTo.color + '">' + playerTo.name + '</b>(' + numberTo + ') ' +
+			'<br/>Result: <b>' + result + '</b></li>'; 
+}
+
+function movesLeft() {
+	return '<li class="list-group-item">' +
+			'<b style="color:' + you.color + '">' + you.name + '</b>: ' + (maximumNumberOfMoves - currentNumberOfMoves) + ' moves left</li>'; 
+}
+
+
+$('#submit').click(function() {
+	var msg = new Chat(you.name, you.color, $('#message').val());
+	socket.emit('chat message', JSON.stringify(msg));
+	$('#message').val('');
+	return false;
+	});
+	
+$("#chat-flip").click(function() {
+	$("#chat-panel").slideToggle();
+	if($("#chat-flip").html() == "Hide Chat") {
+		$("#chat-flip").html('Show Chat');
+	} else {
+		$("#chat-flip").html('Hide Chat');
+		}
+	});
+	
+$("#logs-flip").click(function() {
+	$("#logs-panel").slideToggle();
+	if($("#logs-flip").html() == "Hide Logs") {
+		$("#logs-flip").html('Show Logs');
+	} else {
+		$("#logs-flip").html('Hide Logs');
+		}
+	});
+	
+
 function receiveMsg() {
+	socket.on('log', function(msg) {
+		$('#logs-panel ul').append(msg);
+		var objDiv = document.getElementById("logs-panel");
+		objDiv.scrollTop = objDiv.scrollHeight;
+	});
+	
+	socket.on('player and time', function(msg) {
+		$('#logs .alert').html(msg);
+	});
+	
+	socket.on('chat message', function(msg) {
+		var obj = JSON.parse(msg);
+		$('#chat-show ul').append('<li class="list-group-item">' + '<b style="color:' + obj.color + '">' + obj.name + '</b>: ' + obj.text + '</li>');
+		var objDiv = document.getElementById("chat-show");
+		objDiv.scrollTop = objDiv.scrollHeight;
+	});
+
+
 	socket.on('message', function(obj){
 		var msg = JSON.parse(obj);
 		var possesion = JSON.parse(msg.possesion);
@@ -196,41 +273,23 @@ function receiveMsg() {
 		
 		if(player.name != yourName) {
 			hex[msg.index].armyText.content = msg.army;
-			hex[msg.index].armyText.content = msg.army;
 			if(possesion != 0) {
 				hex[msg.index].player = new Player(possesion.id, possesion.name, possesion.color);
-				hex[msg.index].path.fillColor = possesion.color;
+				hex[msg.index].drawBorders();
 				}
-			if(hex[msg.index].armyText.content > 0) {
-				hex[msg.index].armyText.insertAbove(hex[msg.index].path);
-			} else {
-				hex[msg.index].armyText.insertBelow(hex[msg.index].path);
-				}
+			hex[msg.index].viewOrder();
 		}
 		view.update(); 
 	});
 	
 	socket.on('change', function(msg) {
 		var player = JSON.parse(msg);
-		actualPlayer.fillColor = player.color;
 		if(player.name != yourName) {
-			actualPlayer.content = player.name + "'s turn";
 			inControl = false;
-			for(var i = 0; i < hex.length; i++) {
-				hex[i].press = "light up";
-				for(var i = 0; i < hex[i].neighbours.length; i++) {
-					if(hex[i].neighbours[i].player.name == you.name) {
-							hex[i].neighbours[i].press = "light up";
-						} else {
-							hex[i].neighbours[i].press = "none";
-						}
-				}
-			}
 		} else {
-			actualPlayer.content = "Your turn";
+			currentNumberOfMoves = 0;
 			inControl = true;
 		}
-		view.update();
 	});
 	
 	socket.on('shareBoard', function(obj) {
@@ -242,31 +301,15 @@ function receiveMsg() {
 				b = JSON.parse(board[i]);
 				hex[i].type = b.type;
 				hex[i].armyText.content = b.army;
-				hex[i].armyText.content = b.army;
+				hex[i].path.fillColor = b.color;
 				n = JSON.parse(b.player);
 				if(n != 0) {
 					hex[i].player = new Player(5, n.name, n.color);
-					hex[i].path.fillColor = n.color;
-					if(hex[i].armyText.content > 0) hex[i].armyText.insertAbove(hex[i].path);
-				} else {
-					hex[i].path.fillColor = b.color;
-					}
+					hex[i].drawBorders();
+					hex[i].viewOrder();
+				}
 			}
 		}
-		view.update();
-	});
-	
-	socket.on('time', function(time) {
-		currentTime.content = time;
-		view.update();
-	});
-	
-	socket.on('info', function(msg) {
-		var info = JSON.parse(msg);
-		information.content = info[0] + " joined - players: " + info[1];
-		setTimeout(function() {
-				information.content = "";
-				}, 3000);
 		view.update();
 	});
 }
@@ -325,7 +368,7 @@ function Hex(x, y, size, index, type, neighbours, borders)
 		var point2 = new Point(this.x, this.y - sizeY - 2);
 		
 		for(var i = 0; i < this.neighbours.length; i++) {
-			if(this.neighbours[i].player != this.player) {
+			if(this.neighbours[i].player.name != this.player.name) {
 				//alert("done!");
 				var tempPoint1 = point1.rotate(60 * i, new Point(this.x, this.y));
 				var tempPoint2 = point2.rotate(60 * (i + 1), new Point(this.x, this.y));
@@ -348,30 +391,31 @@ function Hex(x, y, size, index, type, neighbours, borders)
 	
 	this.fight = function(hexFrom, hexTo) {
 		var taken = false;
+		var playerFrom = [];
+		var playerTo = [];
 		if(hexTo.armyText.content == 0) {
 			taken = true;
-		} else if(hexFrom.armyText.content > hexTo.army) {
-			var rnd;
-			if(hexFrom.armyText.content > 2 * hexTo.army) {
-				rnd = Math.floor(Math.random() * 1);
-			} else {
-				rnd = Math.floor(Math.random() * 2);
-			}
-			if(rnd == 0) {
-				taken = true;
-			}
 		} else {
-			var rnd;
-			if(hexTo.armyText.content == hexFrom.army) {
-				rnd = Math.floor(Math.random() * 2);
-			} else if(hexTo.armyText.content < 2 * hexFrom.army) {
-				rnd = Math.floor(Math.random() * 5);
-			} else {
-				rnd = Math.floor(Math.random() * 10);
+			var j = parseInt(hexFrom.armyText.content);
+			for(var i = 0; i < j; i++) {
+				playerFrom.push(Math.floor(Math.random() * 100));
 			}
-			if(rnd == 0) {
+			playerFrom = Math.max.apply(null, playerFrom);
+
+			
+			j = parseInt(hexTo.armyText.content);
+			for(var i = 0; i < hexTo.armyText.content; i++) {
+				playerTo.push(Math.floor(Math.random() * 100));
+			}
+			playerTo = Math.max.apply(null, playerTo);
+			
+			var result = "Loss";
+			if(playerFrom > playerTo) {
 				taken = true;
-			}
+				result = "Victory!";
+				}
+				
+			sendLog(playersFight(hexFrom.player, hexTo.player, playerFrom, playerTo, hexFrom, hexTo, result));
 		}
 		
 		hexFrom.decArmySize(1);
@@ -387,14 +431,10 @@ function Hex(x, y, size, index, type, neighbours, borders)
 		var self = this;
 		data.onMouseEnter = function() {
 			self.enterEvent();
-			self.path.selectedColor = 'yellow';
-			self.path.selected = true;
-			
 		}
 
 		data.onMouseLeave = function() {
 			self.leaveEvent();
-			if(!self.activated) self.path.selected = false;
 		}
 		
 		data.onClick = function() {
@@ -417,17 +457,10 @@ function Hex(x, y, size, index, type, neighbours, borders)
 		if(this.armyText.content <= 0) this.armyText.insertBelow(this.path);
 	}
 	
-	this.lightUp = function() {
-		var self = this;
-		self.color = self.path.fillColor;
-		
-	}
-	
 	this.clickEvent = function() {
 		var self = this;
 		
-		switch(self.press)
-        {
+		switch(self.press) {
             case "light up":
 				if(inControl) {
 				    switchOffAll();
@@ -440,6 +473,8 @@ function Hex(x, y, size, index, type, neighbours, borders)
 						self.neighbours[i].press = "add army";
 						self.neighbours[i].armyFrom = self;
 					}
+					
+					somethingInLightenUp = true;
 				}
                 break;
 			case "switch off":
@@ -454,33 +489,50 @@ function Hex(x, y, size, index, type, neighbours, borders)
 				break;
 			case "add army":
 				if(self.armyFrom.armyText.content > 0) {
-					if(self.player == 0 || self.player == self.armyFrom.player) {
+					if(self.player == 0 || self.player.color == self.armyFrom.player.color) {
 						self.incArmySize(1);
 						self.armyFrom.decArmySize(1);
 						self.armyFrom.player.take(self);
 					} else {
 						self.fight(self.armyFrom, self);
 					}
+					if(lastNode != self.index) {
+						currentNumberOfMoves++;
+						//sendLog(movesLeft());
+						}
+					lastNode = self.index;
+					if(currentNumberOfMoves >= maximumNumberOfMoves) {
+						currentNumberOfMoves = 0;
+						switchOffAll();
+						inControl = false;
+						socket.emit('change', true);
+						lastNode = -1;
+					}
 				}
+				sendMsg(self);
+				sendMsg(self.armyFrom);
 				break;
 			case "starting point":
 				switchOffAll();
 				self.armyText.content = 30;
 				you.take(self);
 				sendMsg(self);
-				beginning = false;
-				beginnerTip.remove();
 				break;
 		}
 	}
 	
 	this.enterEvent = function() {
-		var self = this;
-		//border.position = [self.x, self.y];
+		if(somethingInLightenUp) {
+			if(!this.activated) {
+				switchOffAll();
+			}
+		}
+		this.path.selectedColor = 'yellow';
+		this.path.selected = true;
 	}
 	
 	this.leaveEvent = function() {
-
+		if(!this.activated) this.path.selected = false;
 	}
 	
     this.draw = function() {

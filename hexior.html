@@ -2,16 +2,138 @@
 <html>
 <head>
 <!-- Load the Paper.js library -->
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <script type="text/javascript" src="public\paper.js\docs\assets\js\paper.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-<!-- Define inlined JavaScript -->
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
 <script type="text/javascript" src="public\hexior.js"></script>
 <style>
+
+	body {
+		height: 100%;
+	}
 	
+	#chat {
+		position: fixed;
+		top: 0;
+		right: 0;
+		width: 20%;
+		height: 50%;
+		}
+	
+	#chat-panel {
+		width: 100%;
+		height: 100%;
+	}
+	
+	#chat-show {
+		height: 80%;
+		overflow-y: scroll;
+		resize: vertical;
+		overflow: auto;
+	}
+
+		
+	#message {
+		width: 100%;
+	}
+	
+	.no {
+		padding: 0;
+		margin: 0;
+	}
+	
+	.bordered {
+		border-style: solid;
+		border-width: 2px;
+	}
+	
+	#chat-message {
+		margin: 0;
+		width: 100%;
+	}
+	
+	#submit {
+		float: right;
+		margin-right: 5px;
+	}
+	
+	.head-sign {
+		width: 100%;
+	}
+	
+	
+	#logs {
+		position: fixed;
+		bottom: 0;
+		right: 0;
+		width: 20%;
+		}
+		
+	#logs-panel {
+		width: 100%;
+		height: 300px;
+		overflow-y: scroll;
+		overflow: auto;
+	}
+	
+	#can {
+		position: absolute;
+		width: 80%;
+		height: 100%;
+		overflow: scroll;
+		overflow: auto;
+	}
+
 </style>
 </head>
 <body>
-	<canvas id="myCanvas" width="2000" height="2000"></canvas>
+		<div id="can">
+			<canvas id="myCanvas" width="2000" height="2000"></canvas>
+		</div>
+		<form class="form-horizontal" id="chat">
+			<div class="btn btn-warning head-sign" id="chat-flip">Hide Chat</div>
+			<div id="chat-panel">
+				<div id="chat-show">
+					<ul class="list-group">
+						<li class="list-group-item">gracz1: Tu będą</li>
+						<li class="list-group-item">gracz2: wiadomości tekstowe innych graczy</li>
+						<li class="list-group-item">gracz1: Ale jako że jesteśmy w tybie offline</li>
+						<li class="list-group-item">gracz3: to się nie pojawiają</li>
+						<li class="list-group-item">gracz2: Imiona graczy są kolorowane</li>
+						<li class="list-group-item">gracz3: w zależności jaki kolor mają</li>
+					</ul>
+				</div>
+				<div class="row" id="chat-message">
+					<div class="col-sm-9 no">
+						<input type="text" class="form-control" id="message" placeholder="Enter your message">
+					</div>
+					<div class="col-sm-3 no">
+						<button class="btn btn-danger" id="submit">Send</button>
+					</div>
+				</div>
+			</div>
+		</form>
+		
+		<form class="form-horizontal" id="logs">
+			<div class="alert alert-info">
+				2336's turn: 20 seconds left
+			</div>
+			<div id="logs-panel"> 
+					<ul class="list-group">
+						<li class="list-group-item">Tu będą logi</li>
+						<li class="list-group-item">czyli to co się dzieje w grze</li>
+						<li class="list-group-item">ktoś kogos zaatakował, jakie miał szanse</li>
+						<li class="list-group-item">a jakie przeciwnik, połaczony nowy gracz,</li>
+						<li class="list-group-item">koniec tury itp.</li>
+						<li class="list-group-item">To też już działa</li>
+					</ul>
+			</div>
+			<div class="btn btn-warning head-sign" id="logs-flip">Hide Logs</div>
+		</form>
+	</div>
 </body>
 </html>

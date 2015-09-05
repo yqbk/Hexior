@@ -11,24 +11,52 @@ var players = [];
 var iterator = 0;
 var hexy = [];
 
-var roundTime = 20;
+var roundTime = 30;
 var time = roundTime;
 var timer = setInterval(function() {
 	if(time < 0) {
-		time = roundTime;
-		iterator++;
-		if(iterator > players.length - 1) iterator = 0; 
-		if(players.length > 0) io.emit('change', JSON.stringify(players[iterator]));
+		changePlayers();
 		}
-	io.emit('time', time);
+	if(players.length > 0) io.emit('player and time', raportTime(players[iterator]));
 	time--;
-	},1000);
+	}, 1000);
 
 app.use(express.static(__dirname + '/public'));
 app.get('/', function(req, res){
   //res.sendFile('index.html', { root: path.join(__dirname, '/')});
   res.sendfile('hexior.html');
 });
+
+function changePlayers() {
+	time = roundTime;
+	iterator++;
+	if(iterator > players.length - 1) iterator = 0; 
+	if(players.length > 0) { 
+		io.emit('change', JSON.stringify(players[iterator]));
+		io.emit('log', endOfRound(players[iterator]));
+		} else {
+			hexy = [];
+		}
+}
+
+function endOfRound(player) {
+	return '<li class="list-group-item">' +
+			'Time\'s up: <b style="color:' + player.color + '">' + player.name + '</b>\'s turn</li>'; 
+}
+
+function raportTime(player) {
+	return '<b style="color:' + player.color + '">' + player.name + '</b>\'s turn: <b>' + time + '</b> seconds left'; 
+}
+
+function playerJoined(player, number) {
+	return '<li class="list-group-item">' +
+			'<b style="color:' + player.color + '">' + player.name + '</b> joined - players: <b>' + number + '</b></li>'; 
+}
+
+function userDisconnected(player, number) {
+	return '<li class="list-group-item">' +
+			'<b style="color:' + player.color + '">' + player.name + '</b> disconnected - players: <b>' + number + '</b></li>'; 
+}
 
 function isPlayer(player) {
 	for(var i = 0; i < players.length; i++) {
@@ -79,15 +107,21 @@ io.on('connection', function(socket) {
 	  			hexy.push(JSON.stringify(new Hexy(b.type, b.color, b.player, b.army)));
 	  		}
 	  		time = roundTime;
+			//console.log("puste");
 	  	} else {
 	  		var msg = [JSON.stringify(p), hexy];
 	  		io.emit('shareBoard', JSON.stringify(msg));
+			//console.log("pelne");
 	  	}
 	  	
 	  	
 	  	var info = [p.name, players.length];
-	  	io.emit('info', JSON.stringify(info));
+	  	
+	  	
+	  	io.emit('log', playerJoined(p, players.length));
 	});
+	
+	
 	
   	socket.on('message', function(obj) {
   		var msg = JSON.parse(obj);
@@ -95,26 +129,32 @@ io.on('connection', function(socket) {
  		var tempH = JSON.parse(hexy[msg.index]);
   		tempH.army = msg.army;
   		tempH.player = msg.player;
-  		tempH.color = JSON.parse(msg.player).color;
   		hexy[msg.index] = JSON.stringify(tempH);
   		
 	  	io.emit('message', obj);
   	});
+  	
+  	socket.on('chat message', function(msg) {
+	  	io.emit('chat message', msg);
+  	});
+  	
+  	socket.on('log', function(msg) {
+	  	io.emit('log', msg);
+  	});
+	
+	socket.on('change', function(msg) {
+	  	changePlayers();
+  	});
   
-  socket.on('disconnect', function() {
-  	var k = find(socket.id);
-  	if(k != -1) {
-  		console.log("user disconnected " + socket.id);
-  		players.splice(k, 1);
-  		time = roundTime;
-		if(iterator > players.length - 1) iterator = 0; 
-		if(players.length > 0) {
-			io.emit('change', JSON.stringify(players[iterator]));
-		} else {
-			hexy = [];
-			}
-  	}
-  });
+	socket.on('disconnect', function() {
+		var k = find(socket.id);
+		if(k != -1) {
+			console.log("user disconnected " + socket.id);
+			io.emit('log', userDisconnected(players[k], players.length - 1));
+			players.splice(k, 1);
+			changePlayers();
+		}
+	});
 
 });
 
