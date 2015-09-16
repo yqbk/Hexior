@@ -1,0 +1,212 @@
+<html>
+<head>
+    <title>pixi.js example 1</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+    </style>
+    <script src="public\engine\pixi.js"></script>
+</head>
+<body>
+    <script>
+	var renderer = PIXI.autoDetectRenderer(1800, 950, {backgroundColor : 'black'});
+	document.body.appendChild(renderer.view);
+
+	//var interactive = true;
+	var stage = new PIXI.Container();
+	
+	var grass = PIXI.Texture.fromImage('public/images/grass.png');
+	var forest = PIXI.Texture.fromImage('public/images/forest.png');
+	var water = PIXI.Texture.fromImage('public/images/water.png');
+	var desert = PIXI.Texture.fromImage('public/images/desert.png');
+	var hexFrame = PIXI.Texture.fromImage('public/images/hexFrame.png');
+	//var hexBorder = PIXI.Texture.fromImage('hexBorder.png');
+	var hexWidth = 70;
+	var hexHeight = 81;
+	
+	var inLineX = 25;
+	var inLineY = 15;
+	var lineCounter = 1;
+	
+	var hex = [];
+	var x = -hexWidth/2;
+	var y = hexHeight/2;
+	hex.push(new Hex(0, 0, 0));
+	
+	for(var i = 1; i <= inLineX * inLineY; i++) {
+		x += hexWidth;
+		hex.push(new Hex(x, y, i, "grass"));
+		hex[i].init();
+		if(i % inLineX == 0) {
+			if(lineCounter % 2 == 0) {
+				x = -hexWidth/2;
+			} else {
+				x = -hexWidth/2 + hexWidth/2;
+			}
+			y += hexHeight - hexHeight/3.9;
+			lineCounter++;
+		}
+	}
+	
+	for (var i = 0; i < hex.length; i++) {
+		findNeighbours(hex[i]);
+	}
+	
+	hex[90].incArmy(10);
+	//---------------------------------------------------------------------------------------------
+	
+	function Player(id, name, color) {
+		this.id = id;
+		this.name = name;
+		this.color = color;
+		
+		this.take = function(hex) {
+			hex.player = this;
+			hex.viewOrder();
+		}
+	}
+		
+	function Hex(x, y, index, type) {
+		this.x = x;
+		this.y = y;
+		this.index = index;
+		this.type = type;
+		this.background = 0;
+		this.frame = 0;
+		this.army = 0;
+		this.armyNumber = 0;
+		this.neighbours = 0;
+		this.player = 0;
+		this.armyFrom = 0;
+		this.active = false;
+		this.armyMove = false;
+			
+		this.init = function() {
+			var self = this;
+			this.frame = new PIXI.Sprite(hexFrame);
+			this.frame.position.x = this.x;
+			this.frame.position.y = this.y;
+			this.frame.anchor.x = 0.5;
+			this.frame.anchor.y = 0.5;
+			this.frame.alpha = 0.5;
+			this.frame.visible = false;
+			
+			switch(this.type) {
+				case "grass":
+					this.background = new PIXI.Sprite(grass);
+					break;
+				case "water":
+					this.background = new PIXI.Sprite(water);
+					break;
+				case "forest":
+					this.background = new PIXI.Sprite(forest);
+					break;
+				case "desert":
+					this.background = new PIXI.Sprite(desert);
+					break;
+			}
+			this.background.interactive = true;
+			this.background.position.x = this.x;
+			this.background.position.y = this.y;
+			this.background.anchor.x = 0.5;
+			this.background.anchor.y = 0.5;
+			this.background.on('mousedown', function() {
+				if(!self.active) {
+					desActiveEverything();
+					self.active = true;
+					self.frame.visible = true;
+					for(var i = 0; i < self.neighbours.length; i++) {
+						self.neighbours[i].active = true;
+						self.neighbours[i].armyMove = true;
+						self.neighbours[i].armyFrom = self;
+						self.neighbours[i].frame.visible = true;
+					}
+				} else if(!self.armyMove) {
+					self.active = false;
+					self.frame.visible = false;
+					for(var i = 0; i < self.neighbours.length; i++) {
+						self.neighbours[i].active = false;
+						self.neighbours[i].armyMove = false;
+						self.neighbours[i].frame.visible = false;
+					}
+				} else {
+					if(self.armyFrom.armyNumber > 0) {
+						self.incArmy(1);
+						self.armyFrom.decArmy(1);
+					}
+				}
+			});
+			
+			this.background.on('mouseout', function() {
+				
+			});
+			
+			this.army = new PIXI.Text(this.index, {font : '24px Arial', fill : 'black', align : 'center'});
+			this.army.x = this.x - this.army.width/2;
+			this.army.y = this.y - this.army.height/2;
+			this.army.visible = true;
+			
+			stage.addChild(this.background);
+			stage.addChild(this.frame);
+			stage.addChild(this.army);
+		}
+			
+			this.incArmy = function(n) {
+				if(this.armyNumber == 0) {
+					this.army.visible = true;
+				}
+				
+				this.armyNumber += n;
+				this.army.setText(this.armyNumber);
+				this.army.x = this.x - this.army.width/2;
+				this.army.y = this.y - this.army.height/2;
+			}
+			
+			this.decArmy = function(n) {
+				this.armyNumber -= n;
+				this.army.setText(this.armyNumber);
+				this.army.x = this.x - this.army.width/2;
+				this.army.y = this.y - this.army.height/2;
+				if(this.armyNumber <= 0) {
+					this.army.visible = false;
+				}
+			}
+			
+	}
+	
+	function findNeighbours(obj) {
+		obj.neighbours = [];
+		for(var i = obj.index - inLineX * 2; i <  obj.index + inLineX * 2; i++) {
+			if(hex[i]) {
+				if(Math.abs(hex[i].x - obj.x) <= hexHeight && 
+					Math.abs(hex[i].y - obj.y) <= hexHeight && 
+						hex[i] != obj) obj.neighbours.push(hex[i]);
+			}
+		}
+	}
+	
+	function desActiveEverything() {
+		for(var i = 0; i < hex.length; i++) {
+			hex[i].active = false;
+			hex[i].armyMove = false;
+			hex[i].frame.visible = false;
+		}
+	}
+
+	animate();
+	
+	function animate() {
+		requestAnimationFrame(animate);
+		
+		
+		
+		renderer.render(stage);
+	}
+ 
+    </script>
+ 
+    </body>
+</html>
